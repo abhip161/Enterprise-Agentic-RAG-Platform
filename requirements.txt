@@ -1,0 +1,30 @@
+# --- CORE API & WEB FRAMEWORK ---
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+streamlit
+numpy
+pytz                        # Timezone handling for logs
+nest-asyncio
+
+# Embeddings
+google-generativeai
+langchain-google-genai
+sentence-transformers
+
+# Vector DB & Retrieval
+qdrant-client
+
+# Data Ingestion & Document Parsing 
+unstructured               
+python-pptx                 
+python-docx                 
+pypdf                       
+beautifulsoup4              
+pdfplumber                  
+
+# --- OBSERVABILITY & DISTRIBUTED TRACING ---
+langsmith                   # Specialized tracing for LangChain/LangGraph
+logfire[fastapi,requests]   # Pydantic Logfire — FastAPI + requests instrumentation
+loguru                      # Enhanced logging for Python   
