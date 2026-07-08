@@ -5,6 +5,26 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "beautifulsoup4>=4.15.0",
     "dotenv>=0.9.9",
+    "fastapi>=0.139.0",
+    "google-generativeai>=0.8.6",
+    "langchain-google-genai>=4.2.7",
+    "langsmith>=0.10.0",
+    "logfire[fastapi,requests]>=4.37.0",
+    "loguru>=0.7.3",
+    "nest-asyncio>=1.6.0",
+    "numpy>=2.4.6",
+    "pdfplumber>=0.11.10",
+    "pypdf>=6.14.2",
+    "python-docx>=1.2.0",
+    "python-dotenv>=1.2.2",
+    "python-pptx>=1.0.2",
+    "pytz>=2026.2",
+    "qdrant-client>=1.18.0",
+    "requests>=2.34.2",
+    "sentence-transformers>=5.6.0",
+    "streamlit>=1.59.1",
     "unstructured>=0.24.0",
+    "uvicorn[standard]>=0.51.0",
 ]
