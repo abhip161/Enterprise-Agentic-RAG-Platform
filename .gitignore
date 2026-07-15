@@ -10,3 +10,4 @@ wheels/
 .venv
 .env
 DATA
+processed_data/

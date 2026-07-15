@@ -26,15 +26,15 @@ def _load_fallback():
 
 def _probe_jina_api() -> bool:
     """Verify the Jina Embeddings API is reachable with the configured key."""
-    if not settings.JINA_API_KEY:
-        logfire.info("JINA_API_KEY not set — will use local fallback embeddings.")
+    if not settings.GEMINI_API_KEY:
+        logfire.info("GEMINI_API_KEY not set — will use local fallback embeddings.")
         return False
 
     try:
         response = requests.post(
             _JINA_EMBEDDING_URL,
             headers={
-                "Authorization": f"Bearer {settings.JINA_API_KEY}",
+                "Authorization": f"Bearer {settings.GEMINI_API_KEY}",
                 "Content-Type": "application/json",
             },
             json={
@@ -93,7 +93,7 @@ def _embed_jina_batch(texts: list[str], task: str) -> list[list[float]]:
     response = requests.post(
         _JINA_EMBEDDING_URL,
         headers={
-            "Authorization": f"Bearer {settings.JINA_API_KEY}",
+            "Authorization": f"Bearer {settings.GEMINI_API_KEY}",
             "Content-Type": "application/json",
         },
         json={
