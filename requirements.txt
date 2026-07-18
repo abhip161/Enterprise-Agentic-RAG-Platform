@@ -11,6 +11,7 @@ nest-asyncio
 # Embeddings
 google-generativeai
 langchain-google-genai
+langchain-groq
 sentence-transformers
 
 # Vector DB & Retrieval
