@@ -13,6 +13,7 @@ google-generativeai
 langchain-google-genai
 langchain-groq
 sentence-transformers
+flashrank
 
 # Vector DB & Retrieval
 qdrant-client
