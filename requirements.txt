@@ -7,16 +7,17 @@ streamlit
 numpy
 pytz                        # Timezone handling for logs
 nest-asyncio
+LangGraph
 
 # Embeddings
 google-generativeai
 langchain-google-genai
 langchain-groq
 sentence-transformers
-flashrank
 
 # Vector DB & Retrieval
 qdrant-client
+flashrank
 
 # Data Ingestion & Document Parsing 
 unstructured               
