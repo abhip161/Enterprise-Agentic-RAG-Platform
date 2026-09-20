@@ -1,52 +1,80 @@
+import io
 import logfire
-from pypdf import PdfReader
+from pypdf import PdfReader, PdfWriter
+from google.cloud import documentai
+from app.config import settings
 
+client = documentai.DocumentProcessorServiceClient()
+MAX_PAGES_PER_REQUEST = 15
 
-def parse_pdf(file_path: str) -> str:
+def parse_pdf(file_path: str):
     """
-    Extract text from a PDF locally using pypdf.
-    Falls back to pdfplumber for pages that yield no text (e.g. image-heavy pages).
+    Parses PDF using Google Cloud Document AI.
+    Automatically splits large PDFs into 15-page chunks to bypass synchronous API limits.
     """
-    with logfire.span("PDF Parsing (local)", filename=file_path):
+    with logfire.span("Document AI Parsing", filename=file_path):
         try:
             reader = PdfReader(file_path)
             total_pages = len(reader.pages)
-            logfire.info(f"PDF has {total_pages} pages.")
+            logfire.info(f"Total pages: {total_pages}")
 
-            text_parts: list[str] = []
-            blank_pages: list[int] = []
+            name = client.processor_path(
+                settings.PROJECT_ID, 
+                settings.GCP_DOC_AI_LOCATION, 
+                settings.GCP_DOC_AI_PROCESSOR_ID
+            )
 
-            for i, page in enumerate(reader.pages):
-                text = page.extract_text() or ""
-                if text.strip():
-                    text_parts.append(text)
-                else:
-                    blank_pages.append(i + 1)
+            full_text = ""
 
-            # Fallback: use pdfplumber for any pages pypdf returned blank
-            if blank_pages:
-                logfire.info(f"pypdf returned blank on pages {blank_pages} — retrying with pdfplumber.")
-                try:
-                    import pdfplumber
-
-                    with pdfplumber.open(file_path) as pdf:
-                        for page_num in blank_pages:
-                            page = pdf.pages[page_num - 1]
-                            fallback_text = page.extract_text() or ""
-                            if fallback_text.strip():
-                                text_parts.append(fallback_text)
-                except Exception as plumber_err:
-                    logfire.warning(f"pdfplumber fallback failed: {plumber_err}")
-
-            full_text = "\n".join(text_parts)
+            # If small enough, process entirely
+            if total_pages <= MAX_PAGES_PER_REQUEST:
+                with open(file_path, "rb") as f:
+                    image_content = f.read()
+                full_text = process_document_chunk(image_content, name)
+            else:
+                # Split into chunks of MAX_PAGES_PER_REQUEST
+                logfire.info(f"PDF exceeds {MAX_PAGES_PER_REQUEST} pages. Splitting into chunks...")
+                
+                for i in range(0, total_pages, MAX_PAGES_PER_REQUEST):
+                    writer = PdfWriter()
+                    chunk_end = min(i + MAX_PAGES_PER_REQUEST, total_pages)
+                    
+                    for page_num in range(i, chunk_end):
+                        writer.add_page(reader.pages[page_num])
+                    
+                    # Write chunk to bytes
+                    with io.BytesIO() as bytes_stream:
+                        writer.write(bytes_stream)
+                        chunk_bytes = bytes_stream.getvalue()
+                        
+                    with logfire.span(f"Processing pages {i+1} to {chunk_end}"):
+                        chunk_text = process_document_chunk(chunk_bytes, name)
+                        full_text += chunk_text + "\n"
 
             if not full_text.strip():
-                logfire.warning(f"No text extracted from {file_path}. File may be fully image-based.")
+                logfire.warning(f"Document AI returned empty text for {file_path}")
             else:
-                logfire.info(f"Extracted {len(full_text)} characters from {file_path}.")
+                logfire.info(f"Document AI successfully parsed {len(full_text)} characters")
 
             return full_text
 
         except Exception as e:
-            logfire.error(f"PDF Parse Failed for {file_path}: {e}")
-            raise
+            logfire.error(f"Document AI Parse Failed: {e}")
+            logfire.info("💡 Ensure the Processor ID is correct and the API is enabled.")
+            raise e
+
+
+def process_document_chunk(image_content: bytes, name: str) -> str:
+    """Helper function to send a specific byte chunk to Document AI"""
+    raw_document = documentai.RawDocument(
+        content=image_content, 
+        mime_type="application/pdf"
+    )
+
+    request = documentai.ProcessRequest(
+        name=name, 
+        raw_document=raw_document
+    )
+
+    result = client.process_document(request=request)
+    return result.document.text
