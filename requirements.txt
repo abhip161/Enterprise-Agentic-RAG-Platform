@@ -9,15 +9,27 @@ pytz                        # Timezone handling for logs
 nest-asyncio
 LangGraph
 
-# Embeddings
-google-generativeai
-langchain-google-genai
-langchain-groq
-sentence-transformers
+# --- GOOGLE CLOUD PLATFORM (GCP) ---
+google-cloud-storage        # GCS for Raw and Processed file storage
+google-cloud-aiplatform     # Vertex AI (Embeddings)
+google-cloud-discoveryengine # Vertex AI Search services
+google-cloud-documentai     # OCR & PDF Parsing via Cloud API (Replaced heavy local parsing)
+cloud-sql-python-connector  # Secure connection to Cloud SQL (Postgres)
 
 # Vector DB & Retrieval
 qdrant-client
-flashrank
+flashrank  # Ultra-fast local cross-encoder for semantic reranking
+redis      # In-memory datastore for semantic caching & rate limiting
+sqlalchemy # ORM for persistent conversation history
+pg8000     # PostgreSQL driver for cloud sql
+
+# --- LANGCHAIN & AGENTIC ORCHESTRATION ---
+langchain
+langgraph
+langchain-community
+langchain-google-vertexai  # Integration for Google LLMs/Embeddings
+langchain-groq
+pydantic>=2.0.0  
 
 # Data Ingestion & Document Parsing 
 unstructured               
