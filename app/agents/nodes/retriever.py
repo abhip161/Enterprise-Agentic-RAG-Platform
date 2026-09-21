@@ -9,6 +9,14 @@ def retrieve_node(state: AgentState):
     """
     query = state["current_query"]
     
+    # NEW: Handle conversational follow-ups
+    if query == "CONVERSATIONAL":
+        logfire.info("Skipping retrieval - query is conversational.")
+        return {
+            "documents": [],
+            "status": "Using conversation history. No retrieval needed.",
+            "plan": state["plan"] + ["Retrieval Skipped"],
+    }
     
     # Standard Retrieval Logic
     with logfire.span("Knowledge Retrieval"):
