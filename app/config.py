@@ -21,7 +21,7 @@ class Settings:
     # LLM (Groq)
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GROQ_FALLBACK_API_KEY = os.getenv("GROQ_FALLBACK_API_KEY")
-    GROQ_MODEL = "meta-llama/llama-prompt-guard-2-86m"
+    GROQ_MODEL = "qwen/qwen3.8-27b"
 
     # Observability
     LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "true")
