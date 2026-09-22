@@ -1,0 +1,53 @@
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.installed.cfg
+build/
+dist/
+wheels/
+
+# Virtual environments (huge — never needed in image)
+venv/
+.venv/
+env/
+genv/
+tenvv/
+
+# Secrets
+.env
+
+# Terraform — IaC only, run locally; tfvars contains secrets
+terraform/
+
+# Git & IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+.kilo/
+
+# Observability local state
+.logfire/
+
+
+# Data — lives in GCS, not in containers
+DATA/
+
+# Docs & planning — not needed at runtime
+notebooks/
+DOCS/
+UPDATES TO DO DOCS/
+README.md
+ARCHITECTURE.md
+BUG_AUDIT.md
+IMPROVEMENT_PLAN.md
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
