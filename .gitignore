@@ -13,3 +13,4 @@ DATA
 processed_data/
 BUG_AUDIT.md
 IMPROVEMENT_PLAN.md
+test_guard.py

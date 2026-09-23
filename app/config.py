@@ -22,6 +22,7 @@ class Settings:
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
     GROQ_FALLBACK_API_KEY = os.getenv("GROQ_FALLBACK_API_KEY")
     GROQ_MODEL = "qwen/qwen3.8-27b"
+    GUARD_MODEL = "openai/gpt-oss-20b"
 
     # Observability
     LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "true")
