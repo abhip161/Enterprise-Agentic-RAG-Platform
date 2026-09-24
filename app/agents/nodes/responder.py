@@ -1,11 +1,8 @@
 
 import logfire
 from app.agents.state import AgentState
-from app.config import settings
-from langchain_groq import ChatGroq
+from app.gateway import portkey_client, extract_cache_status
 
-
-llm = ChatGroq(api_key= settings.GROQ_API_KEY, model= settings.GROQ_MODEL, temperature= 0)
 
 def generate_node(state: AgentState):
     """
@@ -60,16 +57,31 @@ def generate_node(state: AgentState):
         "{user_msg}"
         """
 
-    with logfire.span("✍️ LLM Synthesis"):
+    with logfire.span("[LLM] Synthesis"):
         try:
-            content = llm.invoke(prompt).content
-            logfire.info("Response synthesised via LLm")
+            response = portkey_client.chat.completions.create(
+                model="qwen/qwen3.8-27b",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1
+            )
+
+            content = response.choices[0].message.content
+            cache_status = extract_cache_status(response)
+            is_cache_hit = cache_status == "HIT"
+            if is_cache_hit:
+                logfire.info("[Cache] HIT -- response served from Portkey cache.")
+                plan_update = state["plan"] + ["Cache: Hit"]
+                status = "Cache hit — instant response."
+            else:
+                logfire.info("[LLM] Response synthesised via LLM.")
+                plan_update = state["plan"]
+                status = "Response generated."
 
             return {
                 "final_answer": content,
-                "status": "Response generated.",
-                "plan": state["plan"],
-                "messages": [{"role": "assistant", "content": content}],
+                "status": status,
+                "plan": plan_update,
+                "messages": [{"role": "assistant", "content": content}]
             }
 
         except Exception as e:

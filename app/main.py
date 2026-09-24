@@ -62,10 +62,11 @@ def query(request: QueryRequest):
     config = {"configurable": {"thread_id": thread_id}}
     
     try:
-        # Gate 1: NeMo Guardrails — blocks off-topic / jailbreaks
+        # Gate 1: Keyword guardrails -- blocks jailbreaks instantly (0 LLM calls)
+        # Gate 2 (planner node) handles off-topic detection (1 LLM call)
         rail_fired, rail_response = guard(q)
         if rail_fired:
-            logfire.info(f"🛡️ Request blocked by guardrails | thread={thread_id}")
+            logfire.info(f"[Guardrails] Request blocked | thread={thread_id}")
             return {
                 "question": q,
                 "answer": rail_response,
@@ -87,7 +88,7 @@ def query(request: QueryRequest):
         }
 
     except Exception as e:
-        logfire.error(f"❌ Backend Execution Failed: {e}")
+        logfire.error(f"[Error] Backend Execution Failed: {e}")
         return {
             "question": q,
             "answer": "I apologize, but I encountered an internal error. Please try again.",

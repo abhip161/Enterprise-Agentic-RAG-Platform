@@ -1,13 +1,16 @@
-from app.agents.state import AgentState
-from app.config import settings
-from langchain_groq import ChatGroq
+import re
 import logfire
 
+from app.agents.state import AgentState
+from app.gateway import get_langchain_llm
 
-llm = ChatGroq(
-    api_key=settings.GROQ_API_KEY,
-    model=settings.GROQ_MODEL,
-    temperature=0,
+
+llm = get_langchain_llm(feature="planner")
+
+# Canned response for off-topic queries -- returned directly, no extra LLM call.
+_BLOCKED_RESPONSE = (
+    "I'm an Enterprise IT Assistant focused on Kubernetes, infrastructure, "
+    "and networking. I can't help with that -- but ask me anything technical!"
 )
 
 
@@ -28,10 +31,8 @@ def planner_node(state: AgentState):
     )
 
     prompt = f"""
-You are the routing planner for an Enterprise RAG system.
-
-Your job is ONLY to decide whether the CURRENT USER MESSAGE
-needs conversation memory or enterprise knowledge retrieval.
+You are the routing planner and content gate for an Enterprise RAG system.
+Classify the CURRENT USER MESSAGE into exactly one category.
 
 CONVERSATION HISTORY:
 {history}
@@ -39,64 +40,66 @@ CONVERSATION HISTORY:
 CURRENT USER MESSAGE:
 {user_message}
 
+CATEGORIES:
+
+BLOCKED
+The message is off-topic or unrelated to enterprise IT.
+Return exactly: BLOCKED
+Off-topic examples: jokes, recipes, general knowledge, sports, movies,
+weather, math homework, poetry, travel advice, relationship advice,
+what is the capital of France, write me a poem, recommend a movie.
+
+CONVERSATIONAL
+Casual greeting, farewell, or answerable from conversation history.
+Return exactly: CONVERSATIONAL
+Examples: hi, hello, bye, what did I ask, summarize our chat,
+what is my name, what did we discuss earlier.
+
+TECHNICAL
+Any question about Kubernetes, Docker, networking, databases, DevOps,
+cloud, programming, infrastructure, or enterprise technology.
+Return a concise search query (NOT the word TECHNICAL).
+Examples:
+  "how do I autoscale pods on kubernetes" -> autoscale kubernetes pods
+  "what is Kubernetes HPA" -> kubernetes HPA
+  "explain Docker networking" -> docker networking
+
 RULES:
-
-CONVERSATIONAL:
-Return exactly CONVERSATIONAL ONLY if the current message
-can be answered using the conversation history or is casual
-conversation.
-
-Examples:
-- hi
-- hello
-- how are you?
-- what is my name?
-- what did I ask previously?
-- what did we discuss earlier?
-- summarize our conversation
-
-TECHNICAL:
-Any technical, factual, documentation, how-to,
-troubleshooting, programming, infrastructure, cloud,
-Kubernetes, Docker, networking, database, DevOps,
-architecture, or enterprise knowledge question MUST use
-retrieval.
-
-Examples:
-- how to autoscale pods on kubernetes
-- what is Kubernetes HPA
-- how do I configure Redis
-- explain Docker networking
-- how does this architecture work
-- fix this Python error
-- how does the deployment work
-
-IMPORTANT:
-- Judge the CURRENT USER MESSAGE.
-- Do NOT classify a technical question as CONVERSATIONAL.
-- Previous conversation must NOT override a technical query.
+- Judge the CURRENT USER MESSAGE only.
+- Technical questions are NEVER off-topic.
+- When in doubt, classify as TECHNICAL.
 - Do NOT answer the question.
 - Do NOT explain your decision.
-- Return ONLY:
-  CONVERSATIONAL
-  OR
-  a concise search query.
+- Return ONLY one of: BLOCKED, CONVERSATIONAL, or a search query.
 
 CURRENT USER MESSAGE:
 {user_message}
 """
 
-    with logfire.span("🧠 Planner Decision"):
-        decision = llm.invoke(prompt).content.strip()
+    with logfire.span("[Planner] Decision"):
+        raw = llm.invoke(prompt).content.strip()
+        # Strip <think> tags if model includes reasoning (Qwen models)
+        decision = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+        decision = decision.strip("\"'`").split("\n")[0].strip()
         logfire.info(f"Intent identified: {decision}")
-    
+
+    if decision == "BLOCKED":
+        logfire.info("[Planner] Off-topic query blocked.")
+        return {
+            "current_query": "BLOCKED",
+            "final_answer": _BLOCKED_RESPONSE,
+            "status": "Blocked by content policy.",
+            "plan": ["Intent: Off-topic", "Action: Blocked"],
+            "messages": [{"role": "assistant", "content": _BLOCKED_RESPONSE}]
+        }
+
     if decision == "CONVERSATIONAL":
         return {
             "current_query": "CONVERSATIONAL",
             "status": "Handling conversationally (using memory)...",
             "plan": ["Intent: Conversational/Memory", "Retrieval: Skipped"]
         }
-    
+
     return {
         "current_query": decision,
         "status": f"Technical research needed. Searching for: {decision}",

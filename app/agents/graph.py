@@ -19,21 +19,26 @@ workflow.add_node("responder", generate_node)
 def route_planner(state: AgentState):
     """
     Routes the workflow based on the planner's decision.
+    BLOCKED queries short-circuit to END with zero additional LLM calls.
     """
-    if state["current_query"] == "CONVERSATIONAL":
+    query = state["current_query"]
+    if query == "BLOCKED":
+        return END
+    if query == "CONVERSATIONAL":
         return "responder"
     return "retriever"
 
 workflow.set_entry_point("planner")
 
 
-# Conditional Edge: Planner -> Router -> (Retriever OR Responder)
+# Conditional Edge: Planner -> Router -> (END | Retriever | Responder)
 workflow.add_conditional_edges(
     "planner",
     route_planner,
     {
         "retriever": "retriever",
-        "responder": "responder"
+        "responder": "responder",
+        END: END,
     }
 )
 

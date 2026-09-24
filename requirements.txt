@@ -7,7 +7,6 @@ streamlit
 numpy
 pytz                        # Timezone handling for logs
 nest-asyncio
-LangGraph
 
 # --- GOOGLE CLOUD PLATFORM (GCP) ---
 google-cloud-storage        # GCS for Raw and Processed file storage
@@ -29,6 +28,7 @@ langgraph
 langchain-community
 langchain-google-vertexai  # Integration for Google LLMs/Embeddings
 langchain-groq
+langchain-openai  
 pydantic>=2.0.0  
 
 # Data Ingestion & Document Parsing 
@@ -47,3 +47,7 @@ loguru                      # Enhanced logging for Python
 # --- GUARDRAILS ---
 nemoguardrails              # NVIDIA NeMo Guardrails for input/output safety rails
 langchain-nvidia-ai-endpoints #Langchain integration with NVIDIA AI Endpoints
+
+
+# --- LLM GATEWAY ---
+portkey-ai                  # Portkey Gateway for unified LLM routing, fallbacks & observability
