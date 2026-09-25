@@ -19,7 +19,7 @@ def initialize_rails() -> None:
 
     guard_llm = ChatGroq(
         api_key=settings.GROQ_API_KEY,
-        model="qwen/qwen3.8-27b",
+        model=settings.GUARD_MODEL,
         temperature=0,
         reasoning_effort="none"
     )
