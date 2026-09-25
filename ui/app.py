@@ -88,7 +88,7 @@ if prompt := st.chat_input("Ask about your documentation..."):
 
         # Assistant Response
         with st.chat_message("assistant", avatar=AI_AVATAR):
-            with st.status("Agent is thinking...", expanded=True) as status:
+            with st.status("🔍 Agent is thinking...", expanded=True) as status:
                 try:
                     # DISTRIBUTED TRACE: Calling Backend
                     with logfire.span("Calling RAG Backend"):
@@ -110,7 +110,7 @@ if prompt := st.chat_input("Ask about your documentation..."):
                         full_answer = data.get("answer", "Blocked by guardrails.")
                     # Modern synchronous response: answer + thought_process + sources.
                     elif "answer" in data:
-                        status.update(label="Answer Synthesized", state="complete", expanded=False)
+                        status.update(label="✅ Answer Synthesized", state="complete", expanded=False)
                         full_answer = data.get("answer", "No response.")
                     # Legacy async polling path (kept for compatibility).
                     elif "job_id" in data:
