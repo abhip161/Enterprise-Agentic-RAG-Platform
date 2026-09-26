@@ -28,6 +28,9 @@ class Settings:
     PORTKEY_API_KEY = os.getenv("PORTKEY_API_KEY")
     PORTKEY_CONFIG_ID = os.getenv("PORTKEY_CONFIG_ID")
 
+     # --- Evals ---
+    JUDGE_GROQ = os.getenv("JUDGE_GROQ")
+
     # Observability
     LANGSMITH_TRACING = os.getenv("LANGSMITH_TRACING", "true")
     LANGSMITH_API_KEY = os.getenv("LANGSMITH_API_KEY")
