@@ -51,3 +51,11 @@ langchain-nvidia-ai-endpoints #Langchain integration with NVIDIA AI Endpoints
 # --- LLM GATEWAY ---
 portkey-ai                  # Portkey SDK — retry, fallback, caching, observability proxy
 langchain-openai            # ChatOpenAI — OpenAI-compatible client that accepts any base_url
+
+
+# --- EVALUATION (EVALS) ---
+ragas                       # RAG-specific evaluation metrics (Faithfulness, Relevancy, Recall)
+deepeval                    # Pytest-compatible test runner wrapping RAGAS & safety metrics
+langfuse                    # Live production monitoring, tracing & user feedback collection
+
+sentence-transformers       # Embeddings
