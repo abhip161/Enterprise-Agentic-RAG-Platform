@@ -47,3 +47,7 @@ loguru                      # Enhanced logging for Python
 # --- GUARDRAILS ---
 nemoguardrails              # NVIDIA NeMo Guardrails for input/output safety rails
 langchain-nvidia-ai-endpoints #Langchain integration with NVIDIA AI Endpoints
+
+# --- LLM GATEWAY ---
+portkey-ai                  # Portkey SDK — retry, fallback, caching, observability proxy
+langchain-openai            # ChatOpenAI — OpenAI-compatible client that accepts any base_url

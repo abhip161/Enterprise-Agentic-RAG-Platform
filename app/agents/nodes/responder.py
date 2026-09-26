@@ -1,11 +1,8 @@
 
 import logfire
 from app.agents.state import AgentState
-from app.config import settings
-from langchain_groq import ChatGroq
+from app.gateway import portkey_client, extract_cache_status
 
-
-llm = ChatGroq(api_key= settings.GROQ_API_KEY, model= settings.GROQ_MODEL, temperature= 0)
 
 def generate_node(state: AgentState):
     """
@@ -62,18 +59,34 @@ def generate_node(state: AgentState):
 
     with logfire.span("✍️ LLM Synthesis"):
         try:
-            content = llm.invoke(prompt).content
-            logfire.info("Response synthesised via LLm")
+            # ── Native Portkey call (exposes response headers) ──
+            response = portkey_client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+            )
+            content = response.choices[0].message.content
+
+            # ── Cache hit detection ──
+            cache_status = extract_cache_status(response)
+            is_cache_hit = cache_status == "HIT"
+
+            if is_cache_hit:
+                logfire.info("⚡ Gateway Cache Hit — response served from Portkey cache")
+            else:
+                logfire.info("✅ Response synthesised via LLM")
+
+            # ── Append cache tag to thought process when hit ──
+            plan = list(state["plan"])
+            if is_cache_hit:
+                plan.append("Cache: Hit ⚡")
 
             return {
                 "final_answer": content,
                 "status": "Response generated.",
-                "plan": state["plan"],
+                "plan": plan,
                 "messages": [{"role": "assistant", "content": content}],
             }
 
         except Exception as e:
             logfire.error(f"LLM Generation failed after retries: {e}")
             raise e
-
-
