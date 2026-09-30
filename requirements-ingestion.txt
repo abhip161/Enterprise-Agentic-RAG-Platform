@@ -1,0 +1,24 @@
+# --- Ingestion Pipeline ---
+fastapi
+uvicorn[standard]
+python-dotenv
+numpy
+logfire
+loguru
+
+# --- GCP ---
+google-cloud-storage
+google-cloud-aiplatform
+google-cloud-documentai
+
+# --- Document Parsing ---
+unstructured
+python-pptx
+python-docx
+pypdf
+beautifulsoup4
+pdfplumber
+
+# --- Vector DB ---
+qdrant-client
+sentence-transformers

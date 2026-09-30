@@ -1,0 +1,76 @@
+# ──────────────────────────────────────────────
+# Cloud Build — Build all 4 microservice images in parallel
+# Usage: gcloud builds submit --config cloudbuild.yaml --timeout=7200 .
+# ──────────────────────────────────────────────
+
+steps:
+  # Build all 4 images in parallel (waitFor: ['-'] = start immediately)
+
+  - id: 'build-backend'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:latest'
+      - '-f'
+      - 'docker/backend.Dockerfile'
+      - '.'
+    waitFor: ['-']
+
+  - id: 'build-ui'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ui:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ui:latest'
+      - '-f'
+      - 'docker/ui.Dockerfile'
+      - '.'
+    waitFor: ['-']
+
+  - id: 'build-ingestion'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ingestion:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ingestion:latest'
+      - '-f'
+      - 'docker/ingestion.Dockerfile'
+      - '.'
+    waitFor: ['-']
+
+  - id: 'build-evals'
+    name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/evals:${SHORT_SHA}'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/evals:latest'
+      - '-f'
+      - 'docker/evals.Dockerfile'
+      - '.'
+    waitFor: ['-']
+
+images:
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/backend:latest'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ui:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ui:latest'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ingestion:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/ingestion:latest'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/evals:${SHORT_SHA}'
+  - '${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/evals:latest'
+
+substitutions:
+  _REGION: us-central1
+  _REPO: enterprise-rag-repo
+
+options:
+  logging: CLOUD_LOGGING_ONLY

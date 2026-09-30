@@ -1,0 +1,48 @@
+# --- CORE API & WEB FRAMEWORK ---
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+numpy
+pytz
+nest-asyncio
+LangGraph
+
+# --- GOOGLE CLOUD PLATFORM (GCP) ---
+google-cloud-storage
+google-cloud-aiplatform
+google-cloud-discoveryengine
+cloud-sql-python-connector
+
+# --- Vector DB & Retrieval ---
+qdrant-client
+flashrank
+redis
+sqlalchemy
+pg8000
+
+# --- Postgres (psycopg3) for PostgresSaver ---
+psycopg[binary]>=3.1
+psycopg-pool>=3.1
+langgraph-checkpoint-postgres>=2.0
+
+# --- LANGCHAIN & AGENTIC ORCHESTRATION ---
+langchain
+langgraph
+langchain-community
+langchain-google-vertexai
+langchain-groq
+pydantic>=2.0.0
+
+# --- OBSERVABILITY ---
+langsmith
+logfire[fastapi,requests]
+loguru
+
+# --- GUARDRAILS ---
+nemoguardrails
+langchain-nvidia-ai-endpoints
+
+# --- LLM GATEWAY ---
+portkey-ai
+langchain-openai

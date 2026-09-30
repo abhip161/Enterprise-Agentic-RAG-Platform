@@ -1,0 +1,6 @@
+# --- Streamlit Chat UI ---
+# Minimal deps — UI calls backend via HTTPS, no direct GCP/LLM access
+streamlit
+requests
+python-dotenv
+logfire

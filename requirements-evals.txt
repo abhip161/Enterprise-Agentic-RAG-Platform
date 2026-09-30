@@ -1,0 +1,19 @@
+# --- Evals Dashboard ---
+streamlit
+python-dotenv
+requests
+numpy
+logfire
+loguru
+
+# --- GCP ---
+google-cloud-storage
+google-cloud-aiplatform
+
+# --- Evaluation ---
+ragas
+langchain
+langchain-google-vertexai
+langchain-groq
+langsmith
+pydantic>=2.0.0
