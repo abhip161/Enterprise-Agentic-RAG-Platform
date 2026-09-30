@@ -8,20 +8,20 @@ locals {
 
   # Shared env vars for services that need GCP/LLM access
   common_env = {
-    PROJECT_ID            = var.project_id
-    LOCATION              = var.region
-    GROQ_API_KEY          = var.groq_api_key
-    GROQ_FALLBACK_API_KEY = var.groq_fallback_api_key
-    LOGFIRE_TOKEN         = var.logfire_token
-    PORTKEY_API_KEY       = var.portkey_api_key
-    PORTKEY_CONFIG_ID     = var.portkey_config_id
+    PROJECT_ID              = var.project_id
+    LOCATION                = var.region
+    GROQ_API_KEY            = var.groq_api_key
+    GROQ_FALLBACK_API_KEY   = var.groq_fallback_api_key
+    LOGFIRE_TOKEN           = var.logfire_token
+    PORTKEY_API_KEY         = var.portkey_api_key
+    PORTKEY_CONFIG_ID       = var.portkey_config_id
     QDRANT_CLUSTER_ENDPOINT = var.qdrant_url
-    QDRANT_API_KEY        = var.qdrant_api_key
-    OPENROUTER_API_KEY    = var.openrouter_api_key
-    LANGSMITH_TRACING     = "true"
-    LANGSMITH_ENDPOINT    = "https://api.smith.langchain.com"
-    LANGSMITH_API_KEY     = var.langsmith_api_key
-    LANGSMITH_PROJECT     = var.langsmith_project
+    QDRANT_API_KEY          = var.qdrant_api_key
+    OPENROUTER_API_KEY      = var.openrouter_api_key
+    LANGSMITH_TRACING       = "true"
+    LANGSMITH_ENDPOINT      = "https://api.smith.langchain.com"
+    LANGSMITH_API_KEY       = var.langsmith_api_key
+    LANGSMITH_PROJECT       = var.langsmith_project
   }
 }
 
