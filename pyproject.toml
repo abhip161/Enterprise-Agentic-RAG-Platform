@@ -44,7 +44,6 @@ dependencies = [
     "ragas>=0.4.3",
     "redis>=8.1.0",
     "requests>=2.34.2",
-    "sentence-transformers>=5.6.0",
     "sqlalchemy>=2.0.54",
     "streamlit>=1.59.1",
     "unstructured>=0.24.0",
