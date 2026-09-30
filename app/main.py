@@ -74,9 +74,30 @@ def query(request: QueryRequest):
                 "sources": [],
             }
 
-        # Gate 2: LangGraph RAG pipeline
-        # Run the graph synchronously to preserve LOgfire contex variable 
+        # Gate 2: Redis Semantic Cache — return cached answer if similar query exists
+        use_cache = os.getenv("USE_SEMANTIC_CACHE", "false").lower() == "true"
+        if use_cache:
+            from app.services.gcp.redis_semantic_cache import check_cache, store_cache
+            cached = check_cache(q)
+            if cached:
+                logfire.info("⚡ Semantic Cache HIT")
+                return {
+                    "question": q,
+                    "answer": cached,
+                    "thought_process": ["Intent: Cache Hit", "Retrieval: Skipped"],
+                    "status": "Served from semantic cache.",
+                    "sources": [],
+                }
+
+        # Gate 3: LangGraph RAG pipeline
+        # Run the graph synchronously to preserve Logfire context variable
         final_output = rag_agent.invoke(initial_state, config=config)
+
+        # Store answer in cache for future semantic matches
+        if use_cache:
+            answer = final_output.get("final_answer", "")
+            if answer:
+                store_cache(q, answer)
 
         return {
             "question": q,

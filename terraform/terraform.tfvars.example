@@ -1,0 +1,25 @@
+# ──────────────────────────────────────────────
+# terraform.tfvars.example
+# Copy this file to terraform.tfvars and fill in your values.
+# NEVER commit terraform.tfvars — it contains secrets.
+# ──────────────────────────────────────────────
+
+project_id = "your-gcp-project-id"
+region     = "us-central1"
+app_name   = "enterprise-rag"
+
+# --- API Keys ---
+groq_api_key          = "gsk_..."
+groq_fallback_api_key = "gsk_..."
+judge_groq            = "gsk_..."
+logfire_token         = "pylf_v1_..."
+portkey_api_key       = "..."
+portkey_config_id     = "pc-..."
+qdrant_url            = "https://your-cluster.cloud.qdrant.io"
+qdrant_api_key        = "..."
+openrouter_api_key    = "sk-or-v1-..."
+langsmith_api_key     = "lsv2_pt_..."
+langsmith_project     = "enterprise-rag"
+
+# --- Database ---
+db_password = "your-strong-password"

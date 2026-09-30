@@ -10,7 +10,13 @@ wheels/
 .venv
 .env
 DATA
-processed_data/
-BUG_AUDIT.md
-IMPROVEMENT_PLAN.md
-test_guard.py
+DOCS
+ARCHITECTURE.md
+
+# Terraform
+terraform.tfvars
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
