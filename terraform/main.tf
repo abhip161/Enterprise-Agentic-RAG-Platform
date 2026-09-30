@@ -120,20 +120,24 @@ resource "google_artifact_registry_repository" "repo" {
 }
 
 # ──────────────────────────────────────────────
-# Eventarc Service Agent IAM — Race Condition Fix
+# Eventarc Service Agent
 # ──────────────────────────────────────────────
 
-# Wait for GCP to create the Eventarc service agent SA asynchronously
-resource "time_sleep" "wait_for_eventarc_sa" {
-  create_duration = "30s"
-  depends_on      = [google_project_service.services]
+# Explicitly create/get the Google-managed Eventarc service identity.
+resource "google_project_service_identity" "eventarc" {
+  project    = var.project_id
+  service    = "eventarc.googleapis.com"
+  depends_on = [google_project_service.services]
 }
 
 resource "google_project_iam_member" "eventarc_service_agent" {
-  project    = var.project_id
-  role       = "roles/eventarc.serviceAgent"
-  member     = "serviceAccount:service-${data.google_project.project.number}@gcp-sa-eventarc.iam.gserviceaccount.com"
-  depends_on = [time_sleep.wait_for_eventarc_sa]
+  project = var.project_id
+  role    = "roles/eventarc.serviceAgent"
+  member  = google_project_service_identity.eventarc.member
+
+  depends_on = [
+    google_project_service_identity.eventarc
+  ]
 }
 
 # GCS service agent needs Pub/Sub publisher to emit object events
