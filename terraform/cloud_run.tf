@@ -53,6 +53,10 @@ resource "google_cloud_run_v2_service" "backend" {
           cpu    = "1"
         }
       }
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
+      }
 
       # Common env vars
       dynamic "env" {
