@@ -57,5 +57,3 @@ langchain-openai            # ChatOpenAI — OpenAI-compatible client that accep
 ragas                       # RAG-specific evaluation metrics (Faithfulness, Relevancy, Recall)
 deepeval                    # Pytest-compatible test runner wrapping RAGAS & safety metrics
 langfuse                    # Live production monitoring, tracing & user feedback collection
-
-sentence-transformers       # Embeddings
