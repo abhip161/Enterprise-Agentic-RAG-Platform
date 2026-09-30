@@ -6,24 +6,21 @@
 locals {
   ar_prefix = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.repo.repository_id}"
 
-  # Shared env vars for services that need GCP/LLM access
+  # Non-sensitive shared environment variables.
+  #
+  # Sensitive values are loaded directly from
+  # Google Secret Manager below.
   common_env = {
     PROJECT_ID              = var.project_id
     LOCATION                = var.region
-    GROQ_API_KEY            = var.groq_api_key
-    GROQ_FALLBACK_API_KEY   = var.groq_fallback_api_key
-    LOGFIRE_TOKEN           = var.logfire_token
-    PORTKEY_API_KEY         = var.portkey_api_key
     PORTKEY_CONFIG_ID       = var.portkey_config_id
     QDRANT_CLUSTER_ENDPOINT = var.qdrant_url
-    QDRANT_API_KEY          = var.qdrant_api_key
-    OPENROUTER_API_KEY      = var.openrouter_api_key
     LANGSMITH_TRACING       = "true"
     LANGSMITH_ENDPOINT      = "https://api.smith.langchain.com"
-    LANGSMITH_API_KEY       = var.langsmith_api_key
     LANGSMITH_PROJECT       = var.langsmith_project
   }
 }
+
 
 # ──────────────────────────────────────────────
 # 1. Backend — FastAPI + LangGraph Agent
@@ -53,77 +50,200 @@ resource "google_cloud_run_v2_service" "backend" {
           cpu    = "1"
         }
       }
+
       volume_mounts {
         name       = "cloudsql"
         mount_path = "/cloudsql"
       }
 
-      # Common env vars
+      # ────────────────────────────────────────
+      # Non-sensitive environment variables
+      # ────────────────────────────────────────
+
       dynamic "env" {
         for_each = local.common_env
+
         content {
           name  = env.key
           value = env.value
         }
       }
 
-      # Backend-specific env vars
+      # ────────────────────────────────────────
+      # Backend-specific environment variables
+      # ────────────────────────────────────────
+
       env {
         name  = "LOCAL_MODE"
         value = "false"
       }
+
       env {
         name  = "USE_SEMANTIC_CACHE"
         value = "true"
       }
+
       env {
         name  = "REDIS_HOST"
         value = google_redis_instance.cache.host
       }
+
       env {
         name  = "REDIS_PORT"
         value = "6379"
       }
+
       env {
         name  = "DB_HOST"
         value = "/cloudsql/${google_sql_database_instance.postgres.connection_name}"
       }
+
       env {
         name  = "DB_NAME"
         value = "enterprise_rag"
       }
+
       env {
         name  = "DB_USER"
         value = "rag_admin"
       }
+
+      # ────────────────────────────────────────
+      # Secret Manager — API keys
+      # ────────────────────────────────────────
+
       env {
-        name  = "DB_PASSWORD"
-        value = var.db_password
+        name = "GROQ_API_KEY"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.groq_api_key.id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "GROQ_FALLBACK_API_KEY"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.groq_fallback_api_key.id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "QDRANT_API_KEY"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.qdrant_api_key.id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "OPENROUTER_API_KEY"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.openrouter_api_key.id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "LANGSMITH_API_KEY"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.langsmith_api_key.id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "PORTKEY_API_KEY"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.portkey_api_key.id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "LOGFIRE_TOKEN"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.logfire_token.id
+            version = "latest"
+          }
+        }
+      }
+
+      # ────────────────────────────────────────
+      # Secret Manager — Database password
+      # ────────────────────────────────────────
+
+      env {
+        name = "DB_PASSWORD"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.db_password.id
+            version = "latest"
+          }
+        }
       }
     }
 
-    # Direct VPC Egress for Redis (private IP) + Cloud SQL
+    # ──────────────────────────────────────────
+    # Direct VPC Egress
+    # Redis + Cloud SQL private ranges
+    # ──────────────────────────────────────────
+
     vpc_access {
       network_interfaces {
         network    = google_compute_network.vpc.name
         subnetwork = google_compute_subnetwork.subnet.name
       }
-      egress = "ALL_TRAFFIC"
+
+      egress = "PRIVATE_RANGES_ONLY"
     }
 
-    # Cloud SQL Auth Proxy sidecar (built into Cloud Run)
+    # ──────────────────────────────────────────
+    # Cloud SQL Auth Proxy integration
+    # ──────────────────────────────────────────
+
     volumes {
       name = "cloudsql"
+
       cloud_sql_instance {
-        instances = [google_sql_database_instance.postgres.connection_name]
+        instances = [
+          google_sql_database_instance.postgres.connection_name
+        ]
       }
     }
   }
 
-  depends_on = [google_project_service.services]
+  depends_on = [
+    google_project_service.services
+  ]
 }
 
+
+# ──────────────────────────────────────────────
 # Public access for backend
+# ──────────────────────────────────────────────
+
 resource "google_cloud_run_v2_service_iam_member" "backend_public" {
   project  = var.project_id
   location = var.region
@@ -131,6 +251,7 @@ resource "google_cloud_run_v2_service_iam_member" "backend_public" {
   role     = "roles/run.invoker"
   member   = "allUsers"
 }
+
 
 # ──────────────────────────────────────────────
 # 2. UI — Streamlit Chat Interface
@@ -165,15 +286,26 @@ resource "google_cloud_run_v2_service" "ui" {
         name  = "BACKEND_URL"
         value = google_cloud_run_v2_service.backend.uri
       }
+
+      # Logfire from Secret Manager
       env {
-        name  = "LOGFIRE_TOKEN"
-        value = var.logfire_token
+        name = "LOGFIRE_TOKEN"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.logfire_token.id
+            version = "latest"
+          }
+        }
       }
     }
   }
 
-  depends_on = [google_project_service.services]
+  depends_on = [
+    google_project_service.services
+  ]
 }
+
 
 resource "google_cloud_run_v2_service_iam_member" "ui_public" {
   project  = var.project_id
@@ -183,8 +315,9 @@ resource "google_cloud_run_v2_service_iam_member" "ui_public" {
   member   = "allUsers"
 }
 
+
 # ──────────────────────────────────────────────
-# 3. Ingestion — Eventarc Webhook (Internal Only)
+# 3. Ingestion — Eventarc Webhook
 # ──────────────────────────────────────────────
 
 resource "google_cloud_run_v2_service" "ingestion" {
@@ -212,9 +345,10 @@ resource "google_cloud_run_v2_service" "ingestion" {
         }
       }
 
-      # Common env vars
+      # Only non-sensitive shared variables
       dynamic "env" {
         for_each = local.common_env
+
         content {
           name  = env.key
           value = env.value
@@ -225,24 +359,32 @@ resource "google_cloud_run_v2_service" "ingestion" {
         name  = "GCP_RAW_BUCKET"
         value = google_storage_bucket.raw.name
       }
+
       env {
         name  = "GCP_PROCESSED_BUCKET"
         value = google_storage_bucket.processed.name
       }
     }
 
-    # Direct VPC Egress for internal services
+    # ──────────────────────────────────────────
+    # Direct VPC Egress
+    # ──────────────────────────────────────────
+
     vpc_access {
       network_interfaces {
         network    = google_compute_network.vpc.name
         subnetwork = google_compute_subnetwork.subnet.name
       }
-      egress = "ALL_TRAFFIC"
+
+      egress = "PRIVATE_RANGES_ONLY"
     }
   }
 
-  depends_on = [google_project_service.services]
+  depends_on = [
+    google_project_service.services
+  ]
 }
+
 
 # ──────────────────────────────────────────────
 # 4. Evals — RAGAS Evaluation Dashboard
@@ -277,16 +419,32 @@ resource "google_cloud_run_v2_service" "evals" {
         name  = "BACKEND_URL"
         value = google_cloud_run_v2_service.backend.uri
       }
+
+      # Logfire from Secret Manager
       env {
-        name  = "LOGFIRE_TOKEN"
-        value = var.logfire_token
+        name = "LOGFIRE_TOKEN"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.logfire_token.id
+            version = "latest"
+          }
+        }
+      }
+
+      env {
+        name = "JUDGE_GROQ"
+
+        value_source {
+          secret_key_ref {
+            secret  = data.google_secret_manager_secret.judge_groq_api_key.id
+            version = "latest"
+          }
+        }
       }
       env {
-        name  = "JUDGE_GROQ"
-        value = var.judge_groq
-      }
-      env {
-        name  = "GCP_PROCESSED_BUCKET"
+        name = "GCP_PROCESSED_BUCKET"
+
         value = google_storage_bucket.processed.name
       }
 
@@ -295,6 +453,7 @@ resource "google_cloud_run_v2_service" "evals" {
         name  = "PROJECT_ID"
         value = var.project_id
       }
+
       env {
         name  = "LOCATION"
         value = var.region
@@ -302,8 +461,11 @@ resource "google_cloud_run_v2_service" "evals" {
     }
   }
 
-  depends_on = [google_project_service.services]
+  depends_on = [
+    google_project_service.services
+  ]
 }
+
 
 resource "google_cloud_run_v2_service_iam_member" "evals_public" {
   project  = var.project_id

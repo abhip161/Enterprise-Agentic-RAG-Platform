@@ -36,13 +36,6 @@ variable "groq_fallback_api_key" {
   default     = ""
 }
 
-variable "judge_groq" {
-  description = "Groq API key for eval judge LLM"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
 variable "logfire_token" {
   description = "Pydantic Logfire token"
   type        = string
