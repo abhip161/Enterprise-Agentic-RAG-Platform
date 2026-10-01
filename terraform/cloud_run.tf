@@ -235,7 +235,8 @@ resource "google_cloud_run_v2_service" "backend" {
   }
 
   depends_on = [
-    google_project_service.services
+    google_project_service.services,
+    google_secret_manager_secret_iam_member.cloud_run_secrets
   ]
 }
 
@@ -302,7 +303,8 @@ resource "google_cloud_run_v2_service" "ui" {
   }
 
   depends_on = [
-    google_project_service.services
+    google_project_service.services,
+    google_secret_manager_secret_iam_member.cloud_run_secrets
   ]
 }
 
@@ -462,7 +464,8 @@ resource "google_cloud_run_v2_service" "evals" {
   }
 
   depends_on = [
-    google_project_service.services
+    google_project_service.services,
+    google_secret_manager_secret_iam_member.cloud_run_secrets
   ]
 }
 
