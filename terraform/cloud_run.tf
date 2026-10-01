@@ -366,6 +366,16 @@ resource "google_cloud_run_v2_service" "ingestion" {
         name  = "GCP_PROCESSED_BUCKET"
         value = google_storage_bucket.processed.name
       }
+      env {
+        name = "LOGFIRE_TOKEN"
+
+        value_source {
+          secret_key_ref {
+            secret  = "projects/${var.project_id}/secrets/logfire-token"
+            version = "latest"
+          }
+        }
+      }
     }
 
     # ──────────────────────────────────────────
