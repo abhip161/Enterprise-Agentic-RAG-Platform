@@ -30,8 +30,6 @@
 - [Troubleshooting](#troubleshooting)
 - [Development Workflow](#development-workflow)
 - [Testing Strategy](#testing-strategy)
-- [Production Checklist](#production-checklist)
-- [Future Improvements](#future-improvements)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -688,46 +686,6 @@ python -c "from app.services.retrieval.qdrant_service import client; print(clien
 | **Unit Tests** | pytest | Not yet implemented | — |
 | **Integration Tests** | pytest | Not yet implemented | — |
 | **E2E Tests** | pytest + requests | Not yet implemented | — |
-
----
-
-## Production Checklist
-
-- [ ] Rotate all API keys (if previously exposed)
-- [ ] Add API authentication to backend
-- [ ] Add rate limiting
-- [ ] Add input validation (query length limits)
-- [ ] Set `deletion_protection = true` on Cloud SQL
-- [ ] Set `force_destroy = false` on GCS buckets
-- [ ] Upgrade Cloud SQL from `db-f1-micro`
-- [ ] Configure Terraform remote backend (GCS)
-- [ ] Add health check endpoint
-- [ ] Add unit and integration tests
-- [ ] Add linting/formatting to CI pipeline
-- [ ] Add dependency and container scanning
-- [ ] Add non-root user to Dockerfiles
-- [ ] Restrict Evals dashboard access
-- [ ] Set up alerting on error rates and latency
-
----
-
-## Future Improvements
-
-- [ ] API authentication (Bearer token or GCP IAM)
-- [ ] Rate limiting (per-IP and per-tenant)
-- [ ] Multi-tenant support with tenant-scoped collections
-- [ ] Chunk overlap in text splitter
-- [ ] Relevance score threshold for retrieval
-- [ ] Empty retrieval handling (prevent hallucination)
-- [ ] Output validation (hallucination detection)
-- [ ] Source citations in LLM responses
-- [ ] Redis Vector Search for O(1) cache lookups
-- [ ] Document deduplication in ingestion
-- [ ] Comprehensive test suite (unit + integration + E2E)
-- [ ] CI/CD with automated deployment and rollback
-- [ ] Environment separation (dev/staging/prod)
-- [ ] Cloud Armor WAF
-- [ ] Custom observability metrics and dashboards
 
 ---
 
